@@ -1,0 +1,4 @@
+PONT 0
+CLIENTE:
+	15, Paulo
+NOS LIDOS: 2

@@ -1,0 +1,4 @@
+PONT 0
+CLIENTE:
+	11, Vanessa
+NOS LIDOS: 1
