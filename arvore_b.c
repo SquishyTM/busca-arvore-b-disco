@@ -1,3 +1,6 @@
+#include "cliente.h"
+#include "metadados.h"
+#include "no.h"
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -41,8 +44,34 @@ int posicao(int chave, TNo *no) {
  * (cada nó deve ser lido no máximo uma vez)
  */
 TCliente *busca_no(FILE *arq, int d, int ptNo, int chave, int *pt_no, int *qtd_nos_lidos) {
-    //TODO: Implementar essa funcao
-    return NULL;
+    TNo *no_lido;
+    TCliente *cliente_encontrado;
+    int pos;
+    no_lido = le_no_pos(arq, d, ptNo);
+    *qtd_nos_lidos += 1;
+    pos = posicao(chave, no_lido);
+    
+    if (pos < no_lido->m && no_lido->clientes[pos]->cod_cliente == chave) {
+
+        *pt_no = ptNo;
+        cliente_encontrado = cliente(chave, no_lido->clientes[pos]->nome);
+        libera_no(d, no_lido);
+        return cliente_encontrado;
+
+    } else {
+
+        if (no_lido->p[pos] == -1) {
+
+        libera_no(d, no_lido);
+        return NULL;
+
+        } else {
+
+            cliente_encontrado = busca_no(arq, d, no_lido->p[pos], chave, pt_no, qtd_nos_lidos);
+            libera_no(d, no_lido);
+            return cliente_encontrado;
+        }
+    }
 }
 
 /*
@@ -54,10 +83,36 @@ TCliente *busca_no(FILE *arq, int d, int ptNo, int chave, int *pt_no, int *qtd_n
  * Uma árvore vazia (pont_raiz igual a -1) não tem nós para ler
  */
 TCliente *busca(int chave, char *nome_arquivo_metadados, char *nome_arquivo_dados, int d, int *pt_no, int *qtd_nos_lidos) {
-    //TODO: Implementar essa funcao
-    *pt_no = -1;
-    *qtd_nos_lidos = 0;
-    return NULL;
+    FILE *metadados, *dados;
+    TMetadados *meta_open;
+    TCliente *cliente_encontrado;
+    metadados = fopen(nome_arquivo_metadados, "rb");
+    dados = fopen(nome_arquivo_dados, "rb");
+    if (dados == NULL || metadados == NULL){
+
+        if (metadados != NULL) fclose(metadados);
+        if (dados != NULL) fclose(dados);
+        return NULL;
+
+    } else {
+
+        meta_open = le_metadados(metadados);
+        fclose(metadados);
+        
+        if (meta_open == NULL || meta_open->pont_raiz == -1){
+
+            fclose(dados);
+            if (meta_open != NULL) free(meta_open);
+            return NULL;
+
+        } else {
+
+            cliente_encontrado = busca_no(dados, meta_open->d, meta_open->pont_raiz, chave, pt_no, qtd_nos_lidos);
+            fclose(dados);
+            free(meta_open);
+            return cliente_encontrado;
+        }
+    }
 }
 
 int main () {
